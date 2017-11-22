@@ -4,11 +4,9 @@ import org.junit.Test;
 import org.openqa.selenium.*;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebElement;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 import static java.lang.Thread.sleep;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -36,8 +34,8 @@ public class Mine_bot
         System.setProperty("webdriver.chrome.driver", "WebDrivers\\chromedriver.exe");
 
         driver = new ChromeDriver();
-        //String Path = "https://eternitytower.net/signin";
-        String Path = "https://eternitytower.net/mining";
+        String Path = "https://eternitytower.net/signin";
+        //String Path = "https://eternitytower.net/mining";
         driver.manage().window().maximize();
         driver.manage().timeouts().implicitlyWait(3, SECONDS);
         driver.get(Path);
@@ -76,16 +74,7 @@ public class Mine_bot
 
         if (isElementPresent(By.cssSelector("a.nav-link.equipmentLink"), driver))
         {
-            WebElement eqTab = driver.findElement(By.cssSelector("a.nav-link.equipmentLink"));
-            eqTab.click();
-
-            WebElement pick = driver.findElement(By.cssSelector("div.d-flex.flex-column.ml-3 > div:nth-child(1)"));
-            double dmgPick = Double.parseDouble(pick.getText().substring(0, pick.getText().indexOf("\n")));
-            //minePitLink
-            WebElement mineTab = driver.findElement(By.cssSelector("a.nav-link.minePitLink"));
-            mineTab.click();
-
-            driver.manage().timeouts().implicitlyWait(500, MILLISECONDS);
+            double dmgPick = this.getDngPick();
             if(isElementPresent(By.cssSelector("img.minimize-icon"),driver))
             {
                 driver.findElement(By.cssSelector("img.minimize-icon")).click();
@@ -94,61 +83,12 @@ public class Mine_bot
             {
                 try
                 {
-                    WebElement enMiming = driver.findElement(By.cssSelector("div.d-flex.flex-column.mb-3 > div.d-flex"));
-                    String en = enMiming.getText();
-                    double curEnergy = Double.parseDouble(en.split(" / ")[0]);
-                    double fullEnergy = Double.parseDouble(en.split(" / ")[1]);
-
+                    double curEnergy = miningOresAndGetCurEnergyPick(dmgPick);
                     if (curEnergy <= 1.0)
-                        try {
-                            sleep(this.timeout * 60000);
-//                            b_bot.plantation(driver, "dragonfruitSeed");//идем ростить.
-//                            driver.get("https://eternitytower.net/mining");
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
-                    List<WebElement> ore = driver.findElements(By.cssSelector("div.icon-box.mine-space-container"));
-                    for (WebElement oneOre : ore) {
-                        try {
-                            if (isChildElementPresent(By.cssSelector("img.ore-icon"), oneOre)) {
-                                WebElement img = oneOre.findElement(By.cssSelector("img.ore-icon"));
-                                String srcImg = img.getAttribute("src").toLowerCase();
-
-                                String oreHP = oneOre.findElement(By.cssSelector("span")).getText();
-                                //Проверяем ХП
-                                Double curOreHP = Double.parseDouble(oreHP.split(" / ")[0].replace(".", "").replace("k", "00"));
-                                Double fullOreHP = Double.parseDouble(oreHP.split(" / ")[1].replace(".", "").replace("k", "00"));
-                                //Если это GEM, то копаем их несчадно
-                                if (srcImg.contains("jade") || srcImg.contains("sapphire") || srcImg.contains("lapis") || srcImg.contains("ruby") || srcImg.contains("emerald") || srcImg.contains("gem")) {
-
-                                    Double needClickCnt = curOreHP / dmgPick;
-                                    while (needClickCnt >= 0.1) {
-                                        enMiming = driver.findElement(By.cssSelector("div.d-flex.flex-column.mb-3 > div.d-flex"));
-                                        en = enMiming.getText();
-                                        curEnergy = Double.parseDouble(en.split(" / ")[0]);
-                                        if (curEnergy < 1) break;
-                                        oneOre.click();
-                                        needClickCnt--;
-                                    }
-                                }
-                                //Если текущее хп равно или меньше половины, копаем
-                                else if (curOreHP <= (fullOreHP * allowHpOre)) {
-                                    oneOre.click();
-                                }
-                            /*
-                            * else if (sType == "jade")     sType = "GEM (jade)";
-                            else if (sType == "lapis")    sType = "GEM (lapis)";
-                            else if (sType == "sapphire") sType = "GEM (sapphire)";
-                            else if (sType == "ruby")     sType = "GEM (ruby)";
-                            else if (sType == "emerald")  sType = "GEM (emerald)";
-                            * */
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-//                            driver.close();
-                        }
-
+                    {
+                        plantation(seed);
+                        driver.get("https://eternitytower.net/mining");
+                        sleep(this.timeout * 60000);
                     }
                 }
                 catch (Exception e)
@@ -156,12 +96,12 @@ public class Mine_bot
                     e.printStackTrace();
                 }
                 if (exit) break;
-
-
             }
         }
         driver.close();
     }
+
+
 
     @Test
     public void Battle()
@@ -194,7 +134,7 @@ public class Mine_bot
                             }
                         }
 //                        sleep(21*60*1000);//Превращаю бота в выращивателя.
-                        plantation(driver, seed);
+                        plantation(seed);
                         driver.get("https://eternitytower.net/combat");
                         //driver.switchTo().window(tabs.get(0));
                         if (exit) break;
@@ -217,6 +157,71 @@ public class Mine_bot
         driver.close();
     }
 
+    private Double miningOresAndGetCurEnergyPick(Double dmgPick)
+    {
+        driver.manage().timeouts().implicitlyWait(500, MILLISECONDS);
+        WebElement enMiming = driver.findElement(By.cssSelector("div.d-flex.flex-column.mb-3 > div.d-flex"));
+        String en = enMiming.getText();
+        double curEnergy = Double.parseDouble(en.split(" / ")[0]);
+        //double fullEnergy = Double.parseDouble(en.split(" / ")[1]);
+
+        if (curEnergy <= 1.0)
+            return curEnergy;
+
+        List<WebElement> ore = driver.findElements(By.cssSelector("div.icon-box.mine-space-container"));
+        for (WebElement oneOre : ore) {
+            try {
+                if (isChildElementPresent(By.cssSelector("img.ore-icon"), oneOre)) {
+                    WebElement img = oneOre.findElement(By.cssSelector("img.ore-icon"));
+                    String srcImg = img.getAttribute("src").toLowerCase();
+
+                    String oreHP = oneOre.findElement(By.cssSelector("span")).getText();
+                    //Проверяем ХП
+                    Double curOreHP = Double.parseDouble(oreHP.split(" / ")[0].replace(".", "").replace("k", "00"));
+                    Double fullOreHP = Double.parseDouble(oreHP.split(" / ")[1].replace(".", "").replace("k", "00"));
+                    //Если это GEM, то копаем их несчадно
+                    if (srcImg.contains("jade") || srcImg.contains("sapphire") || srcImg.contains("lapis") || srcImg.contains("ruby") || srcImg.contains("emerald") || srcImg.contains("gem")) {
+
+                        Double needClickCnt = curOreHP / dmgPick;
+                        while (needClickCnt >= 0.1) {
+                            enMiming = driver.findElement(By.cssSelector("div.d-flex.flex-column.mb-3 > div.d-flex"));
+                            en = enMiming.getText();
+                            curEnergy = Double.parseDouble(en.split(" / ")[0]);
+                            if (curEnergy < 1) break;
+                            oneOre.click();
+                            needClickCnt--;
+                        }
+                    }
+                    //Если текущее хп равно или меньше половины, копаем
+                    else if (curOreHP <= (fullOreHP * allowHpOre)) {
+                        oneOre.click();
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        en = driver.findElement(By.cssSelector("div.d-flex.flex-column.mb-3 > div.d-flex")).getText();
+        curEnergy = Double.parseDouble(en.split(" / ")[0]);
+
+        return curEnergy;
+    }
+
+    private Double getDngPick()
+    {
+        WebElement eqTab = driver.findElement(By.cssSelector("a.nav-link.equipmentLink"));
+        eqTab.click();
+
+        WebElement pick = driver.findElement(By.cssSelector("div.d-flex.flex-column.ml-3 > div:nth-child(1)"));
+        double dmgPick = Double.parseDouble(pick.getText().substring(0, pick.getText().indexOf("\n")));
+        //minePitLink
+        WebElement mineTab = driver.findElement(By.cssSelector("a.nav-link.minePitLink"));
+        mineTab.click();
+
+        return dmgPick;
+    }
+
     private WebElement checkSeed(String seedName) {
         List<WebElement> seeds = driver.findElements(By.cssSelector("div.item-icon-container.item.small"));
         if (seeds.size() > 0)
@@ -235,9 +240,9 @@ public class Mine_bot
         return null;
     }
 
-    private void plantation(WebDriver driver, String seed) {
+    private void plantation(String seed) {
         try {
-            if (this.driver == null) this.driver = driver; //HACK!
+            driver.manage().timeouts().implicitlyWait(15, SECONDS);
             driver.get("https://eternitytower.net/farming");
 //            driver.switchTo().window(tabs.get(1));
             if (isDisplayedElement(By.cssSelector("li.nav-item.plotsLink"))) {
@@ -270,7 +275,7 @@ public class Mine_bot
 
                 }
             }
-            driver.switchTo().window(tabs.get(0));
+            //driver.switchTo().window(tabs.get(0));
             //driver.get("https://eternitytower.net/combat");
         }
         catch (Exception e)
