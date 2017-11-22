@@ -24,9 +24,11 @@ public class Mine_bot
     private boolean exit = false; //Вспомогательная переменная, чтоб можно было прервать бесконечный цыкл.
     private static final Integer floorNum = 6; //на какой этаж идем
     private static final Integer roomNum = 2; //на в какую комнату
-    public static String food = "dragonfruit"; //Что едим
-    public static String seed = "dragonfruitSeed"; //Что сажаем.
+    private static String food = "dragonfruit"; //Что едим
+    private static String seed = "dragonfruitSeed"; //Что сажаем.
     private ArrayList<String> tabs; //Возможно вообще не нужно.
+    private String login = "Deventur";
+    private String pass = "qazxcv";
 
     @Before
     public void Login()
@@ -46,8 +48,8 @@ public class Mine_bot
             WebElement loginField = driver.findElement(By.id("at-field-username_and_email"));
             WebElement passField = driver.findElement(By.id("at-field-password"));
 
-            loginField.sendKeys("Deventur");
-            passField.sendKeys("qazxc");
+            loginField.sendKeys(this.login);
+            passField.sendKeys(this.pass);
 
             WebElement signBtn = driver.findElement(By.id("at-btn"));
             signBtn.click();
