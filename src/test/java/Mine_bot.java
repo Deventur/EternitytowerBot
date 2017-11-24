@@ -25,8 +25,8 @@ public class Mine_bot
     private static String food = "dragonfruit"; //Что едим
     private static String seed = "dragonfruitSeed"; //Что сажаем.
     private ArrayList<String> tabs; //Возможно вообще не нужно.
-    private String login = "Deventur";
-    private String pass = "qazxcv";
+    private String login = "xarr";
+    private String pass = "kiklkikl";
 
     @Before
     public void Login()
@@ -64,6 +64,17 @@ public class Mine_bot
             System.out.println("Выполнить вход НЕ удалось!");
             assertTrue("Выполнить вход НЕ удалось!",false);
         }
+    }
+
+    @Test
+    public void Plantation()
+    {
+        while (true)
+        {
+            plantation(seed);
+            if (exit) break;
+        }
+        driver.close();
     }
 
     @Test
