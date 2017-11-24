@@ -4,14 +4,17 @@ import org.junit.Test;
 import org.openqa.selenium.*;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.RemoteWebElement;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.Thread.sleep;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static junit.framework.TestCase.assertTrue;
+import static org.openqa.grid.common.SeleniumProtocol.Selenium;
 
 public class Mine_bot
 {
@@ -23,14 +26,27 @@ public class Mine_bot
     private static final Integer floorNum = 6; //на какой этаж идем
     private static final Integer roomNum = 2; //на в какую комнату
     private static String food = "dragonfruit"; //Что едим
-    private static String seed = "dragonfruitSeed"; //Что сажаем.
+
     private ArrayList<String> tabs; //Возможно вообще не нужно.
     private String login = "Deventur";
     private String pass = "qazxcv";
+    //Зерна которые хотим сажать в проядке их приоритета.
+    private static ArrayList<String> seed =  new ArrayList<String>()
+                                                                    {{  add("dragonfruitSeed");
+                                                                        add("chilliSeed");
+                                                                        add("lemonSeed");
+                                                                    }};
+    private static ArrayList<String> itemsForCraft =  new ArrayList<String>()
+                                                                    {{  add("polished_gold");
+                                                                        add("polished_iron");
+                                                                        add("iron_pylon");
+                                                                        add("tin_pylon");
+                                                                    }};
 
     @Before
     public void Login()
     {
+
         System.setProperty("webdriver.chrome.driver", "WebDrivers\\chromedriver.exe");
 
         driver = new ChromeDriver();
@@ -71,9 +87,11 @@ public class Mine_bot
     {
         String Path = "https://eternitytower.net/mining";
         driver.get(Path);
+        driver.manage().timeouts().implicitlyWait(7, SECONDS);
 
         if (isElementPresent(By.cssSelector("a.nav-link.equipmentLink"), driver))
         {
+
             double dmgPick = this.getDngPick();
             if(isElementPresent(By.cssSelector("img.minimize-icon"),driver))
             {
@@ -87,6 +105,7 @@ public class Mine_bot
                     if (curEnergy <= 1.0)
                     {
                         plantation(seed);
+                        crafting(itemsForCraft);
                         driver.get("https://eternitytower.net/mining");
                         sleep(this.timeout * 60000);
                     }
@@ -100,6 +119,7 @@ public class Mine_bot
         }
         driver.close();
     }
+
 
 
 
@@ -210,37 +230,108 @@ public class Mine_bot
 
     private Double getDngPick()
     {
-        WebElement eqTab = driver.findElement(By.cssSelector("a.nav-link.equipmentLink"));
-        eqTab.click();
+        try {
+            WebElement eqTab = driver.findElement(By.cssSelector("a.nav-link.equipmentLink"));
+            eqTab.click();
+            sleep(2000);
 
-        WebElement pick = driver.findElement(By.cssSelector("div.d-flex.flex-column.ml-3 > div:nth-child(1)"));
-        double dmgPick = Double.parseDouble(pick.getText().substring(0, pick.getText().indexOf("\n")));
-        //minePitLink
-        WebElement mineTab = driver.findElement(By.cssSelector("a.nav-link.minePitLink"));
-        mineTab.click();
+            WebElement pick = driver.findElement(By.cssSelector("div.d-flex.flex-column.ml-3 > div:nth-child(1)"));
+            double dmgPick = Double.parseDouble(pick.getText().substring(0, pick.getText().indexOf("\n")));
+            //minePitLink
+            WebElement mineTab = driver.findElement(By.cssSelector("a.nav-link.minePitLink"));
+            mineTab.click();
 
-        return dmgPick;
+            return dmgPick;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return 50.0;
+        }
     }
 
-    private WebElement checkSeed(String seedName) {
+    private void crafting(ArrayList<String> itemsForCraft)
+    {
+        try {
+            driver.manage().timeouts().implicitlyWait(15, SECONDS);
+            driver.get("https://eternitytower.net/crafting");
+//            driver.switchTo().window(tabs.get(1));
+            if (isDisplayedElement(By.cssSelector("li.nav-item.crafting-filter")))
+            {
+                driver.findElement(By.cssSelector("li.nav-item.crafting-filter[data-filter='all']")).click();
+
+                //если уже что-то крафтим, то выходим
+                driver.manage().timeouts().implicitlyWait(3, SECONDS);
+                if(isDisplayedElement(By.cssSelector("div.my-3>div.d-flex.flex-row>div"))) return;
+                Actions actions = new Actions(driver);
+                List<WebElement> recipes = driver.findElements(By.cssSelector("div.recipe-container"));
+                boolean craftingFlag = false;
+                for(String item: itemsForCraft)
+                {
+                    //List<WebElement> re = recipes.stream().filter(x->x.getAttribute("data-recipe")==item).collect(Collectors.toList());
+                    for(WebElement re: recipes) {
+                        if (re.getAttribute("data-recipe").contains(item)) {
+                            if (isChildElementPresent(By.cssSelector("div div span.text-success"), re)) //проверка на то, что мы можем его сделать.
+                            {
+                                WebElement element = re.findElement(By.cssSelector("div.quick-craft"));
+                                actions.moveToElement(element, 10, 10)
+                                        .click(element)
+                                        .click(element)
+                                        .click(element)
+                                        .click(element)
+                                        .click(element)
+                                        .build()
+                                        .perform();
+                                craftingFlag = true;
+                                break;
+                            }
+                        }
+                    }
+                    if(craftingFlag) break;
+
+                }
+
+                //тут надо сделать пройтись по всему списку itemForCraft, и как только находим один из рецептов, кликаем по нему (div.quick-craft).
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private WebElement checkSeed(ArrayList<String> seedName) {
         List<WebElement> seeds = driver.findElements(By.cssSelector("div.item-icon-container.item.small"));
         if (seeds.size() > 0)
         {   //Пробегам по всем семенам, и ищем то, которое хотим сажать
+            HashMap<String, WebElement> necessaryGrain = new HashMap();
             for (WebElement s : seeds)
             {
                 WebElement img = s.findElement(By.cssSelector("img"));
+                String curNameSeed = img.getAttribute("src");
+                curNameSeed = curNameSeed.substring(curNameSeed.lastIndexOf("/")+1,curNameSeed.lastIndexOf(".svg"));
                 //То, что хотим сажать живет в seedName
-                if(img.getAttribute("src").contains(seedName))
+                if(seedName.contains(curNameSeed))
                 {
                     //Запоминаем
-                    return s;
+                    //return s;
+                    necessaryGrain.put(curNameSeed, s);
+                }
+            }
+            //Перебираем все желаемые зерна по порядку
+            for(String sn : seedName)
+            {
+                if (necessaryGrain.containsKey(sn))
+                {
+                    //как только находим то зерно, которое хотим сажать - возвращаем его WebElement.
+                    return necessaryGrain.get(sn);
                 }
             }
         }
         return null;
     }
 
-    private void plantation(String seed) {
+    private void plantation(ArrayList<String> seed) {
         try {
             driver.manage().timeouts().implicitlyWait(15, SECONDS);
             driver.get("https://eternitytower.net/farming");
@@ -253,23 +344,25 @@ public class Mine_bot
                 //Пробегам по всем грядкам
                 for (WebElement curBed : beds) {
                     WebElement img = curBed.findElement(By.cssSelector("img"));
+                    WebElement plantedSeed = checkSeed(seed);
                     //Если грядка не пустая, а ростение выросло
                     if (!img.getAttribute("src").contains("emptyFarmSpace") && !img.getAttribute("src").contains("sapling")) {
                         //То собираем его
                         curBed.click();
                         try {
                             sleep(1000);
+
                             //Если у нас есть семена, и грядка не занята, то сажаем на нее семечко
-                            if ((checkSeed(seed) != null && !Objects.equals(checkSeed(this.seed), null))) {
-                                checkSeed(seed).click();
+                            if ((plantedSeed != null && !Objects.equals(plantedSeed, null))) {
+                                plantedSeed.click();
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     } else if (!img.getAttribute("src").contains("sapling")) {
                         //Если у нас есть семена, и грядка не занята, то сажаем на нее семечко
-                        if ((checkSeed(this.seed) != null && !Objects.equals(checkSeed(this.seed), null))) {
-                            checkSeed(this.seed).click();
+                        if ((plantedSeed != null && !Objects.equals(plantedSeed, null))) {
+                            plantedSeed.click();
                         }
                     }
 
