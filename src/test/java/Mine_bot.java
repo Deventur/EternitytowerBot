@@ -20,8 +20,8 @@ public class Mine_bot
 {
     private static WebDriver driver;
     private WebElement oneOre; //Возможно вообще не нужно.
-    private long timeout = 10; //таймаут ожидания отката
-    private double allowHpOre = 0.75; //Допустимый процет ХП у руды, чтоб ее начать вскаповать.
+    private long timeout = 5; //таймаут ожидания в минутах
+    private double allowHpOre = 0.666; //Допустимый процет ХП у руды, чтоб ее начать вскаповать.
     private boolean exit = false; //Вспомогательная переменная, чтоб можно было прервать бесконечный цыкл.
     private static final Integer floorNum = 6; //на какой этаж идем
     private static final Integer roomNum = 2; //на в какую комнату
@@ -37,10 +37,11 @@ public class Mine_bot
                                                                         add("lemonSeed");
                                                                     }};
     private static ArrayList<String> itemsForCraft =  new ArrayList<String>()
-                                                                    {{  add("polished_gold");
-                                                                        add("polished_iron");
+                                                                    {{
                                                                         add("iron_pylon");
                                                                         add("tin_pylon");
+                                                                        add("polished_gold");
+                                                                        add("polished_iron");
                                                                     }};
 
     @Before
@@ -120,9 +121,6 @@ public class Mine_bot
         driver.close();
     }
 
-
-
-
     @Test
     public void Battle()
     {
@@ -140,8 +138,8 @@ public class Mine_bot
                         enterToBattle(floorNum, roomNum);
                         Map<String, Integer> resaltBattle = battle();
                         if (resaltBattle!=null) {
-                            if (resaltBattle.get("Health") <= resaltBattle.get("FullHealth") / 2
-                                    || resaltBattle.get("Energy") <= resaltBattle.get("FullEnergy") / 2) {
+                            if (resaltBattle.get("Health") <= resaltBattle.get("FullHealth") * 0.3
+                                    || resaltBattle.get("Energy") <= resaltBattle.get("FullEnergy") * 0.3) {
                                 if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
                                     eat();
                                 }
@@ -154,8 +152,8 @@ public class Mine_bot
                             }
                         }
 //                        sleep(21*60*1000);//Превращаю бота в выращивателя.
-                        plantation(seed);
-                        driver.get("https://eternitytower.net/combat");
+//                        plantation(seed);
+//                        driver.get("https://eternitytower.net/combat");
                         //driver.switchTo().window(tabs.get(0));
                         if (exit) break;
                     }
@@ -200,7 +198,7 @@ public class Mine_bot
                     Double curOreHP = Double.parseDouble(oreHP.split(" / ")[0].replace(".", "").replace("k", "00"));
                     Double fullOreHP = Double.parseDouble(oreHP.split(" / ")[1].replace(".", "").replace("k", "00"));
                     //Если это GEM, то копаем их несчадно
-                    if (srcImg.contains("jade") || srcImg.contains("sapphire") || srcImg.contains("lapis") || srcImg.contains("ruby") || srcImg.contains("emerald") || srcImg.contains("gem")) {
+                    if (curOreHP <= (dmgPick * 2) || curOreHP <= (fullOreHP * 0.05) || srcImg.contains("jade") || srcImg.contains("sapphire") || srcImg.contains("lapis") || srcImg.contains("ruby") || srcImg.contains("emerald") || srcImg.contains("gem")) {
 
                         Double needClickCnt = curOreHP / dmgPick;
                         while (needClickCnt >= 0.1) {
@@ -261,6 +259,7 @@ public class Mine_bot
                 driver.findElement(By.cssSelector("li.nav-item.crafting-filter[data-filter='all']")).click();
 
                 //если уже что-то крафтим, то выходим
+                //Тут надо подправить, чтоб если крафтим 4 и более вещей, то выходим
                 driver.manage().timeouts().implicitlyWait(3, SECONDS);
                 if(isDisplayedElement(By.cssSelector("div.my-3>div.d-flex.flex-row>div"))) return;
                 Actions actions = new Actions(driver);
@@ -368,8 +367,6 @@ public class Mine_bot
 
                 }
             }
-            //driver.switchTo().window(tabs.get(0));
-            //driver.get("https://eternitytower.net/combat");
         }
         catch (Exception e)
         {
