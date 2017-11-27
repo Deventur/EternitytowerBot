@@ -86,6 +86,7 @@ public class Mine_bot
     @Test
     public void MiningAll()
     {
+        //adventuresBattle(new ArrayList<String>(){{add("");}});
         String Path = "https://eternitytower.net/mining";
         driver.get(Path);
         driver.manage().timeouts().implicitlyWait(7, SECONDS);
@@ -138,14 +139,26 @@ public class Mine_bot
                         enterToBattle(floorNum, roomNum);
                         Map<String, Integer> resaltBattle = battle();
                         if (resaltBattle!=null) {
-                            if (resaltBattle.get("Health") <= resaltBattle.get("FullHealth") * 0.3
-                                    || resaltBattle.get("Energy") <= resaltBattle.get("FullEnergy") * 0.3) {
+                            if (resaltBattle.get("Health") <= resaltBattle.get("FullHealth") * 0.3)
+                            {
                                 if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
-                                    eat();
+                                    eat(food);
                                 }
 
                                 try {
                                     sleep(15000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            else if (resaltBattle.get("Energy") <= resaltBattle.get("FullEnergy") * 0.1)
+                            {
+                                if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
+                                    eat("lemon");
+                                }
+
+                                try {
+                                    sleep(100_000);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
@@ -173,6 +186,47 @@ public class Mine_bot
         }
 
         driver.close();
+    }
+
+    private void adventuresBattle(ArrayList<String> assignAdv)
+    {
+        String Path = "https://eternitytower.net/combat";
+        driver.get(Path);
+        driver.manage().timeouts().implicitlyWait(30, SECONDS);
+        if (isElementPresent(By.cssSelector("li.nav-item.adventuresTabLink"))) {
+            WebElement eqTab = driver.findElement(By.cssSelector("li.nav-item.adventuresTabLink"));
+            eqTab.click();//мы во вкладке Adventures
+
+            //Получить текущие адвенчуры:
+            ArrayList<Arventure> activeAdventures = new ArrayList<>();
+            List<WebElement> actAdventures = driver.findElements(By.xpath("//../button[contains(@class, 'cancel-adventure-btn')]/../.."));
+            actAdventures.forEach(adv-> activeAdventures.add(new Arventure(adv,
+                    adv.getText().split("\n")[1],
+                    adv.getText().split("\n")[2])));
+
+            //Фильтруем доступные адвенчуры:
+            ArrayList<Arventure> shortAdventure = new ArrayList<>();
+            ArrayList<Arventure> longAdventure = new ArrayList<>();
+            ArrayList<Arventure> epicAdventure = new ArrayList<>();
+
+            List<WebElement> sAdventures = driver.findElements(By.cssSelector("div.adventure-item-container.inactive-adventure"));
+            sAdventures.stream().filter(adv -> adv.getText().split("\n")[1].contains("Short"))
+                    .forEach(adv->shortAdventure.add(new Arventure(adv,
+                        adv.getText().split("\n")[1],
+                        adv.getText().split("\n")[2])));
+            sAdventures.stream().filter(adv -> adv.getText().split("\n")[1].contains("Long"))
+                    .forEach(adv->longAdventure.add(new Arventure(adv,
+                            adv.getText().split("\n")[1],
+                            adv.getText().split("\n")[2])));
+            sAdventures.stream().filter(adv -> adv.getText().split("\n")[1].contains("Epic"))
+                    .forEach(adv->epicAdventure.add(new Arventure(adv,
+                            adv.getText().split("\n")[1],
+                            adv.getText().split("\n")[2])));
+            System.out.println();
+        }
+
+
+
     }
 
     private Double miningOresAndGetCurEnergyPick(Double dmgPick)
@@ -374,7 +428,7 @@ public class Mine_bot
         }
     }
 
-    private void eat() {
+    private void eat(String food) {
         try {
             if (isDisplayedElement(By.cssSelector("li.nav-item.equipmentTabLink"))) {
                 driver.findElement(By.cssSelector("li.nav-item.equipmentTabLink")).click(); //Мы в меню снаряжения!
