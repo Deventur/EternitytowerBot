@@ -8,13 +8,11 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.RemoteWebElement;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.lang.Thread.sleep;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static junit.framework.TestCase.assertTrue;
-import static org.openqa.grid.common.SeleniumProtocol.Selenium;
 
 public class Mine_bot
 {
@@ -32,12 +30,16 @@ public class Mine_bot
     private String pass = "qazxcv";
     //Зерна которые хотим сажать в проядке их приоритета.
     private static ArrayList<String> seed =  new ArrayList<String>()
-                                                                    {{  add("dragonfruitSeed");
+                                                                    {{
                                                                         add("chilliSeed");
+                                                                        add("bambooSeed");
+                                                                        add("dragonfruitSeed");
                                                                         add("lemonSeed");
                                                                     }};
     private static ArrayList<String> itemsForCraft =  new ArrayList<String>()
                                                                     {{
+                                                                        add("bronze_wall");
+                                                                        add("copper_sculpture");
                                                                         add("iron_pylon");
                                                                         add("tin_pylon");
                                                                         add("polished_gold");
@@ -86,7 +88,14 @@ public class Mine_bot
     @Test
     public void MiningAll()
     {
-        //adventuresBattle(new ArrayList<String>(){{add("");}});
+//        adventuresBattle(new ArrayList<AdventurePriority>(){{
+//                                                                add(new AdventurePriority("Short","Magic"));
+//                                                                add(new AdventurePriority("Short","Physical"));
+//                                                                add(new AdventurePriority("Long","Magic"));
+//                                                                add(new AdventurePriority("Epic","Magic"));
+//                                                                add(new AdventurePriority("Long","Physical"));
+//                                                                add(new AdventurePriority("Epic","Physical"));
+//                                                            }});
         String Path = "https://eternitytower.net/mining";
         driver.get(Path);
         driver.manage().timeouts().implicitlyWait(7, SECONDS);
@@ -188,7 +197,7 @@ public class Mine_bot
         driver.close();
     }
 
-    private void adventuresBattle(ArrayList<String> assignAdv)
+    private void adventuresBattle(ArrayList<AdventurePriority> adventurePriorities )
     {
         String Path = "https://eternitytower.net/combat";
         driver.get(Path);
@@ -197,31 +206,32 @@ public class Mine_bot
             WebElement eqTab = driver.findElement(By.cssSelector("li.nav-item.adventuresTabLink"));
             eqTab.click();//мы во вкладке Adventures
 
-            //Получить текущие адвенчуры:
-            ArrayList<Arventure> activeAdventures = new ArrayList<>();
+            //Получить текущие адвенчуры и расставляем им приортитеты:
+            ArrayList<Adventure> activeAdventures = new ArrayList<>();
             List<WebElement> actAdventures = driver.findElements(By.xpath("//../button[contains(@class, 'cancel-adventure-btn')]/../.."));
-            actAdventures.forEach(adv-> activeAdventures.add(new Arventure(adv,
-                    adv.getText().split("\n")[1],
-                    adv.getText().split("\n")[2])));
+            actAdventures.forEach(adv-> {
+                String timeType = adv.getText().split("\n")[1];
+                String stateType = adv.getText().split("\n")[2];
+                Integer priority = adventurePriorities.indexOf(new AdventurePriority(timeType,stateType));
+                activeAdventures.add(new Adventure(adv, timeType, stateType, priority));
+            });
 
             //Фильтруем доступные адвенчуры:
-            ArrayList<Arventure> shortAdventure = new ArrayList<>();
-            ArrayList<Arventure> longAdventure = new ArrayList<>();
-            ArrayList<Arventure> epicAdventure = new ArrayList<>();
-
             List<WebElement> sAdventures = driver.findElements(By.cssSelector("div.adventure-item-container.inactive-adventure"));
-            sAdventures.stream().filter(adv -> adv.getText().split("\n")[1].contains("Short"))
-                    .forEach(adv->shortAdventure.add(new Arventure(adv,
-                        adv.getText().split("\n")[1],
-                        adv.getText().split("\n")[2])));
-            sAdventures.stream().filter(adv -> adv.getText().split("\n")[1].contains("Long"))
-                    .forEach(adv->longAdventure.add(new Arventure(adv,
-                            adv.getText().split("\n")[1],
-                            adv.getText().split("\n")[2])));
-            sAdventures.stream().filter(adv -> adv.getText().split("\n")[1].contains("Epic"))
-                    .forEach(adv->epicAdventure.add(new Arventure(adv,
-                            adv.getText().split("\n")[1],
-                            adv.getText().split("\n")[2])));
+
+            ArrayList<Adventure> availableAdventures = new ArrayList<>();
+            sAdventures.forEach(adv -> {
+                String timeType = adv.getText().split("\n")[1];
+                String stateType = adv.getText().split("\n")[2];
+                Integer priority = adventurePriorities.indexOf(new AdventurePriority(timeType,stateType));
+                availableAdventures.add(new Adventure(adv, timeType, stateType, priority));
+            });
+
+
+            /*Тут надо пройтись по кадому активному, и если его приоритет ниже,
+            * чем есть доступный, то его отменяем, и запускаем приоритетный неактивный адвенчур.
+            * Тот который остановили - заменяем тем, который запустили.
+            * */
             System.out.println();
         }
 
