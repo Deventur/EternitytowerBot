@@ -17,13 +17,14 @@ public class Mine_bot
 {
     private static WebDriver driver;
     private WebElement oneOre; //Возможно вообще не нужно.
-    private long timeout = 10; //таймаут ожидания отката
-    private double allowHpOre = 0.75; //Допустимый процет ХП у руды, чтоб ее начать вскаповать.
+    private long timeout = 1; //таймаут ожидания отката
+    private double allowHpOre = 0.4; //Допустимый процет ХП у руды, чтоб ее начать вскаповать.
     private boolean exit = false; //Вспомогательная переменная, чтоб можно было прервать бесконечный цыкл.
     private static final Integer floorNum = 6; //на какой этаж идем
     private static final Integer roomNum = 2; //на в какую комнату
     private static String food = "dragonfruit"; //Что едим
-    private static String seed = "dragonfruitSeed"; //Что сажаем.
+    private static String seed = "hydrangeaSeed"; //Что сажаем.
+    //private static String seed = "bananaSeed"; //Что сажаем.
     private ArrayList<String> tabs; //Возможно вообще не нужно.
     private String login = "xarr";
     private String pass = "kiklkikl";
@@ -69,10 +70,21 @@ public class Mine_bot
     @Test
     public void Plantation()
     {
+        this.timeout = 30;
         while (true)
         {
-            plantation(seed);
+            try
+            {
+                plantation(seed);
+                sleep(this.timeout * 6000);
+
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
             if (exit) break;
+
         }
         driver.close();
     }
@@ -83,8 +95,10 @@ public class Mine_bot
         String Path = "https://eternitytower.net/mining";
         driver.get(Path);
 
+        //driver.manage().timeouts().implicitlyWait(30, SECONDS);
         if (isElementPresent(By.cssSelector("a.nav-link.equipmentLink"), driver))
         {
+
             double dmgPick = this.getDngPick();
             if(isElementPresent(By.cssSelector("img.minimize-icon"),driver))
             {
@@ -204,7 +218,7 @@ public class Mine_bot
                         }
                     }
                     //Если текущее хп равно или меньше половины, копаем
-                    else if (curOreHP <= (fullOreHP * allowHpOre)) {
+                    else if (curOreHP <= (fullOreHP * allowHpOre) ||curOreHP<603 ) {
                         oneOre.click();
                     }
                 }
@@ -221,16 +235,24 @@ public class Mine_bot
 
     private Double getDngPick()
     {
-        WebElement eqTab = driver.findElement(By.cssSelector("a.nav-link.equipmentLink"));
-        eqTab.click();
+        try
+        {
+            WebElement eqTab = driver.findElement(By.cssSelector("a.nav-link.equipmentLink"));
+            eqTab.click();
+            sleep(2000);
+            WebElement pick = driver.findElement(By.cssSelector("div.d-flex.flex-column.ml-3 > div:nth-child(1)"));
+            double dmgPick = Double.parseDouble(pick.getText().substring(0, pick.getText().indexOf("\n")).replace("(",""));
+            //minePitLink
+            WebElement mineTab = driver.findElement(By.cssSelector("a.nav-link.minePitLink"));
+            mineTab.click();
 
-        WebElement pick = driver.findElement(By.cssSelector("div.d-flex.flex-column.ml-3 > div:nth-child(1)"));
-        double dmgPick = Double.parseDouble(pick.getText().substring(0, pick.getText().indexOf("\n")));
-        //minePitLink
-        WebElement mineTab = driver.findElement(By.cssSelector("a.nav-link.minePitLink"));
-        mineTab.click();
-
-        return dmgPick;
+            return dmgPick;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return 104.0;
     }
 
     private WebElement checkSeed(String seedName) {
