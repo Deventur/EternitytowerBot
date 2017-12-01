@@ -112,6 +112,8 @@ public class Mine_bot
             {
                 try
                 {
+                    WebElement mineTab = driver.findElement(By.cssSelector("a.nav-link.minePitLink"));
+                    mineTab.click();
                     double curEnergy = miningOresAndGetCurEnergyPick(dmgPick);
                     if (curEnergy <= 1.0)
                     {
