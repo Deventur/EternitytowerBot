@@ -21,7 +21,7 @@ public class Mine_bot
     private long timeout = 5; //таймаут ожидания в минутах
     private double allowHpOre = 0.666; //Допустимый процет ХП у руды, чтоб ее начать вскаповать.
     private boolean exit = false; //Вспомогательная переменная, чтоб можно было прервать бесконечный цыкл.
-    private Integer floorNum = 6; //на какой этаж идем
+    private Integer floorNum = 5; //на какой этаж идем
     private Integer roomNum = 4; //в какую комнату
     private static String food = "dragonfruit"; //Что едим
 
@@ -202,6 +202,58 @@ public class Mine_bot
         }
         driver.close();
     }
+
+    @Test
+    public void PasiveBattle()
+    {
+        String Path = "https://eternitytower.net/combat";
+        driver.get(Path);
+        driver.manage().timeouts().implicitlyWait(30, SECONDS);
+
+        try {
+            if (isElementPresent(By.cssSelector("li.nav-item.towerTabLink"), driver)) {
+                while (true) {
+                    try
+                    {
+                        WebElement abilitiesTab = driver.findElement(By.cssSelector("li.nav-item.abilitiesTabLink"));
+                        abilitiesTab.click();//мы во вкладке Башня
+                        Map<String, Integer> resaltBattle = pasiveBattle();
+                        if (resaltBattle!=null) {
+                            if (resaltBattle.get("Health") <= 50)
+                            {
+                                if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
+                                    eat("lettice");
+                                }
+                            }
+                            else if (resaltBattle.get("Energy") <= resaltBattle.get("FullEnergy") * 0.1)
+                            {
+                                if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
+                                    eat("lemon");
+                                }
+                            }
+                        }
+                        abilitiesTab.click();//мы во вкладке Башня
+                        //sleep(70*1000); //ждем 70 секунд
+                        if (exit) break;
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                        if (!isElementPresent(By.cssSelector("li.nav-item.towerTabLink"))){
+                            sleep(20000);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        driver.close();
+    }
+
 
     @Test
     public void DemonsBattle()
@@ -631,7 +683,7 @@ public class Mine_bot
 
     private Map<String,Integer> demonsBattle(){
 
-        //TODO Надо исправить!
+
         if(driver.findElements(By.xpath("//div/div/h1[contains(text(),'Enemy Units')]/../../div[contains(@class,'d-flex')]/div")).size()>=1)
         {
             //div.ability-icon-container
@@ -689,10 +741,69 @@ public class Mine_bot
         return null;
     }
 
+    private Map<String,Integer> pasiveBattle() {
+        //Ждем начала биты.
+        while(true) {
+            //как только битва началась, стандартно отрабатываем ее до ее окончания.
+            if (driver.findElements(By.xpath("//div/div/h1[contains(text(),'Enemy Units')]/../../div[contains(@class,'d-flex')]/div")).size() >= 1) {
+
+                List<WebElement> abilitys = driver.findElements(By.cssSelector("div.ability-icon-container"));
+                driver.manage().timeouts().implicitlyWait(300, MILLISECONDS);
+                Integer attempts = 0;
+                WebElement personHP = null;
+                Integer curPersonHP = 1000;
+                Integer fullPersonHP = 1000;
+                while (!isDisplayedResaltBattle() && attempts < 10) {
+                    try {
+                        personHP = driver.findElement(By.xpath("//h1[text()[contains(.,'My')]]/../../div/div/div/div[contains(@class,'justify-content-center')]"));
+                        curPersonHP = Integer.parseInt(personHP.getText().split(" / ")[0].replace(".", "").replace("k", "00"));
+                        fullPersonHP = Integer.parseInt(personHP.getText().split(" / ")[1].replace(".", "").replace("k", "00"));
+                        if (curPersonHP <= fullPersonHP * 0.17) {
+                            abilitys.get(2).click();
+                            abilitys.get(3).click();
+                            abilitys.get(4).click();
+                            abilitys.get(5).click();
+                            sleep(3000);
+                        }
+                        abilitys.get(5).click();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        attempts++;
+                    }
+                }
+                //как только битва закончена (вышли из внутреннего цикла), перестаем ждать битву
+                break;
+            }
+            else if (exit) break; //чтоб можно было "законно" выйти из цыкла
+
+        }
+
+        try {
+            //"подсчитываем потери" и выдем их наружу как результат.
+            WebElement curEn = driver.findElement(By.cssSelector("div.d-flex.flex-column.my-3"));
+            List<WebElement> curState = driver.findElements(By.cssSelector("div.d-flex.flex-column.m-3"));
+
+
+            Integer curPersonHP = Integer.parseInt(curState.get(0).getText().split(" / ")[0].replace(".", "").replace("k", "00"));
+            Integer fullPersonHP = Integer.parseInt(curState.get(0).getText().split(" / ")[1].replace(".", "").replace("k", "00"));
+            Integer curPersonEnergy = Integer.parseInt(curEn.getText().split(" / ")[0]);
+            Integer fullPersonEnergy = Integer.parseInt(curEn.getText().split(" / ")[1]);
+            Map<String, Integer> curPersonState = new HashMap<>();
+            curPersonState.put("Health", curPersonHP);
+            curPersonState.put("FullHealth", fullPersonHP);
+            curPersonState.put("Energy", curPersonEnergy);
+            curPersonState.put("FullEnergy", fullPersonEnergy);
+            driver.manage().timeouts().implicitlyWait(3, SECONDS);
+            return curPersonState;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     private Map<String,Integer> battle(){
 
-        //TODO Надо исправить!
-        if(driver.findElements(By.cssSelector("div.d-flex.battle-unit-container.flex-column.align-items-center.flex-wrap.justify-content-center.px-2")).size()>=2)
+        if(driver.findElements(By.xpath("//div/div/h1[contains(text(),'Enemy Units')]/../../div[contains(@class,'d-flex')]/div")).size()>=1)
         {
             //div.ability-icon-container
             List<WebElement> abilitys = driver.findElements(By.cssSelector("div.ability-icon-container"));
