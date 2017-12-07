@@ -204,7 +204,7 @@ public class Mine_bot
     }
 
     @Test
-    public void PasiveBattle()
+    public void PassiveBattle()
     {
         String Path = "https://eternitytower.net/combat";
         driver.get(Path);
