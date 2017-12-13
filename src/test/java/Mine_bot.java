@@ -35,19 +35,20 @@ public class Mine_bot
                                                                         add("endiveSeed");
                                                                         add("juniperSeed");
                                                                         add("pinkRoseSeed");
+                                                                        add("letticeSeed");
+                                                                        add("bananaSeed");
+                                                                        add("lemonSeed");
+                                                                        add("feverfewSeed");
                                                                         add("hydrangeaSeed");
                                                                         add("cardoonSeed");
-                                                                        add("letticeSeed");
                                                                         add("dragonfruitSeed");
-                                                                        add("lemonSeed");
                                                                         add("chilliSeed");
                                                                         add("bambooSeed");
                                                                         add("pineappleSeed");
-//                                                                        add("lemonSeed");
                                                                     }};
     private static ArrayList<String> itemsForCraft =  new ArrayList<String>()
                                                                     {{
-
+                                                                        add("bronze_wall");
                                                                         add("bronze_wall");
                                                                         add("copper_sculpture");
                                                                         add("iron_pylon");
@@ -99,6 +100,8 @@ public class Mine_bot
     public void Platation()
     {
         try {
+            String Path = "https://eternitytower.net/farming";
+            driver.get(Path);
             Date oldDate = new Date(); //старое время в миллисекундах
             Date newDate = oldDate;
             while (true) {
@@ -211,7 +214,7 @@ public class Mine_bot
         driver.manage().timeouts().implicitlyWait(30, SECONDS);
 
         try {
-            if (isElementPresent(By.cssSelector("li.nav-item.towerTabLink"), driver)) {
+            if (isDisplayedElement(By.cssSelector("li.nav-item.abilitiesTabLink"))) {
                 while (true) {
                     try
                     {
@@ -225,7 +228,7 @@ public class Mine_bot
                                     eat("lettice");
                                 }
                             }
-                            else if (resaltBattle.get("Energy") <= resaltBattle.get("FullEnergy") * 0.1)
+                            else if (resaltBattle.get("Energy") <= resaltBattle.get("FullEnergy") * 0.2)
                             {
                                 if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
                                     eat("lemon");
@@ -239,9 +242,6 @@ public class Mine_bot
                     catch (Exception e)
                     {
                         e.printStackTrace();
-                        if (!isElementPresent(By.cssSelector("li.nav-item.towerTabLink"))){
-                            sleep(20000);
-                        }
                     }
                 }
             }
@@ -263,7 +263,7 @@ public class Mine_bot
         driver.manage().timeouts().implicitlyWait(30, SECONDS);
 
         try {
-            if (isElementPresent(By.cssSelector("li.nav-item.towerTabLink"), driver)) {
+            if (isDisplayedElement(By.cssSelector("li.nav-item.towerTabLink"))) {
                 while (true) {
                     try
                     {
@@ -765,6 +765,8 @@ public class Mine_bot
                             abilitys.get(5).click();
                             sleep(3000);
                         }
+                        abilitys.get(2).click();
+                        abilitys.get(3).click();
                         abilitys.get(5).click();
                     } catch (Exception e) {
                         e.printStackTrace();
