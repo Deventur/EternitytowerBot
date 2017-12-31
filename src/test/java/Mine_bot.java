@@ -18,12 +18,12 @@ public class Mine_bot
 {
     private static WebDriver driver;
     private WebElement oneOre; //Возможно вообще не нужно.
-    private long timeout = 5; //таймаут ожидания в минутах
+    private long timeout = 3; //таймаут ожидания в минутах
     private double allowHpOre = 0.666; //Допустимый процет ХП у руды, чтоб ее начать вскаповать.
     private boolean exit = false; //Вспомогательная переменная, чтоб можно было прервать бесконечный цыкл.
-    private Integer floorNum = 5; //на какой этаж идем
+    private Integer floorNum = 9; //на какой этаж идем
     private Integer roomNum = 4; //в какую комнату
-    private static String food = "dragonfruit"; //Что едим
+    private static String food = "banana"; //Что едим
 
     private ArrayList<String> tabs; //Возможно вообще не нужно.
     private String login = "Deventur";
@@ -48,13 +48,16 @@ public class Mine_bot
                                                                     }};
     private static ArrayList<String> itemsForCraft =  new ArrayList<String>()
                                                                     {{
-                                                                        add("bronze_wall");
-                                                                        add("bronze_wall");
+                                                                        add("carbon_spear");
+                                                                        add("polished_titanium");
+                                                                        add("polished_steel");
+                                                                        add("polished_gold");
+                                                                        //add("carbon_sculpture");
+                                                                        add("polished_iron");
+                                                                        add("polished_tin");
                                                                         add("copper_sculpture");
                                                                         add("iron_pylon");
                                                                         add("tin_pylon");
-                                                                        add("polished_gold");
-                                                                        add("polished_iron");
                                                                     }};
 
     @Before
@@ -122,35 +125,31 @@ public class Mine_bot
     public void Eating()
     {
         Date oldDate = new Date(); //старое время в миллисекундах
-        Date newDate = new Date();
-
-        String Path = "https://eternitytower.net/combat";
-        driver.get(Path);
-        driver.manage().timeouts().implicitlyWait(3, SECONDS);
-        if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
-            eat("lemon");
-//            eat("lettice");
-            if(isDisplayedElement(By.cssSelector("li.nav-item.abilitiesTabLink"))) {
-                driver.findElement(By.cssSelector("li.nav-item.abilitiesTabLink")).click();
-            }
-        }
+        Date newDate;
         while (true) {
             try {
-                sleep(20000);
                 newDate = new Date();
+                //тут надо задать время в которое он (бот) будет проверять жратву
                 if ((newDate.getTime() - oldDate.getTime())/(1000)>= (20*60))
                 {
-                    if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
-                        eat("lemon");
-                        oldDate=newDate;
-                        if(isDisplayedElement(By.cssSelector("li.nav-item.abilitiesTabLink"))) {
-                            driver.findElement(By.cssSelector("li.nav-item.abilitiesTabLink")).click();
+                    //Проверяем на вкладке еквипмента ли мы
+                    if(isDisplayedElement(By.cssSelector("li.nav-item.equipmentTabLink a.active")))
+                    {
+                        //Проверяем ХПшки
+                        WebElement personHP = driver.findElement(By.xpath("//h1[text()[contains(.,'My')]]/../../div/div/div/div[contains(@class,'justify-content-center')]"));
+                        int curPersonHP = Integer.parseInt(personHP.getText().split(" / ")[0].replace(".", "").replace("k", "00"));
+                        int fullPersonHP = Integer.parseInt(personHP.getText().split(" / ")[1].replace(".", "").replace("k", "00"));
+                        if (curPersonHP <= fullPersonHP*0.5) {
+                            //Проверяем не жрем ли мы что-то, тут может быть баг с боевым бафом (который глобал), может надо убрать.
+                            if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
+                                eat("lemon");//тут указать что жрать
+                                oldDate = newDate;
+                            }
                         }
-
                     }
                 }
                 if (exit)  break;
-
+                sleep(20000);
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -161,14 +160,10 @@ public class Mine_bot
     @Test
     public void MiningAll()
     {
-//        adventuresBattle(new ArrayList<AdventurePriority>(){{
-//                                                                add(new AdventurePriority("Short","Magic"));
-//                                                                add(new AdventurePriority("Short","Physical"));
-//                                                                add(new AdventurePriority("Long","Magic"));
-//                                                                add(new AdventurePriority("Epic","Magic"));
-//                                                                add(new AdventurePriority("Long","Physical"));
-//                                                                add(new AdventurePriority("Epic","Physical"));
-//                                                            }});
+
+        Date oldDate = new Date(); //старое время в миллисекундах
+        Date newDate;
+
         String Path = "https://eternitytower.net/mining";
         driver.get(Path);
         driver.manage().timeouts().implicitlyWait(7, SECONDS);
@@ -188,13 +183,20 @@ public class Mine_bot
                     WebElement mineTab = driver.findElement(By.cssSelector("a.nav-link.minePitLink"));
                     mineTab.click();
                     double curEnergy = miningOresAndGetCurEnergyPick(dmgPick);
-                    if (curEnergy <= 1.0)
+                    newDate = new Date();
+
+                    if (newDate.getTime() - oldDate.getTime()>= (this.timeout*60_000))
                     {
-                        //plantation(seed);
+                        oldDate = newDate;
                         crafting(itemsForCraft);
                         driver.get("https://eternitytower.net/mining");
-                        sleep(this.timeout * 60000);
                     }
+                    else if(curEnergy <= 1.0)
+                    {
+                        sleep(60_000);
+                    }
+                    //тут надо задать время в которое он (бот) будет проверять жратву
+
                 }
                 catch (Exception e)
                 {
@@ -275,7 +277,7 @@ public class Mine_bot
                             if (resaltBattle.get("Health") <= 50)
                             {
                                 if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
-                                    eat("lettice");
+                                    eat(food);
                                 }
                             }
                             else if (resaltBattle.get("Energy") <= resaltBattle.get("FullEnergy") * 0.1)
@@ -499,52 +501,57 @@ public class Mine_bot
             driver.manage().timeouts().implicitlyWait(15, SECONDS);
             driver.get("https://eternitytower.net/crafting");
 //            driver.switchTo().window(tabs.get(1));
-            if (isDisplayedElement(By.cssSelector("li.nav-item.crafting-filter")))
-            {
+            if (isDisplayedElement(By.cssSelector("li.nav-item.crafting-filter"))){
+
                 driver.findElement(By.cssSelector("li.nav-item.crafting-filter[data-filter='all']")).click();
 
-                //если уже что-то крафтим, то выходим
-                //Тут надо подправить, чтоб если крафтим 4 и более вещей, то выходим
-                driver.manage().timeouts().implicitlyWait(3, SECONDS);
-                if(isDisplayedElement(By.cssSelector("div.my-3>div.d-flex.flex-row>div"))) return;
-                Actions actions = new Actions(driver);
-                List<WebElement> recipes = driver.findElements(By.cssSelector("div.recipe-container"));
-                boolean craftingFlag = false;
-                for(String item: itemsForCraft)
-                {
-                    //List<WebElement> re = recipes.stream().filter(x->x.getAttribute("data-recipe")==item).collect(Collectors.toList());
-                    for(WebElement re: recipes) {
-                        if (re.getAttribute("data-recipe").contains(item)) {
-                            if (isChildElementPresent(By.cssSelector("div div span.text-success"), re)) //проверка на то, что мы можем его сделать.
-                            {
-                                WebElement element = re.findElement(By.cssSelector("div.quick-craft"));
-                                //Проучаем кол-во сколько можем скрафтить, и размер пачки
-                                Double itemCount = Double.parseDouble(re.findElement(By.cssSelector("div div span.text-success")).getText());
-                                Double dataAmount = Double.parseDouble(element.getAttribute("data-amount"));
-                                Double craftCount = itemCount/dataAmount;
-                                //Если их отношение меньше 1, то пропускаем!
-                                if(craftCount < 1.0 )
-                                    continue;
-                                else if(craftCount > 5.0)
-                                    craftCount = 5.0;
-                                else
-                                    craftCount = Math.ceil(itemCount/dataAmount);
+                driver.manage().timeouts().implicitlyWait(1, SECONDS);
 
-                                for (int i=0; i<craftCount; i++)
+//                if(isDisplayedElement(By.cssSelector("div.my-3>div.d-flex.flex-row img"))) {
+                    List<WebElement> craftingItems = driver.findElements(By.cssSelector("div.my-3>div.d-flex.flex-row img"));
+                    //если сейчас крафтим больше 4 предметов, то выходим
+                    if (craftingItems.size() > 4)
+                        return;
+
+                    Actions actions = new Actions(driver);
+                    List<WebElement> recipes = driver.findElements(By.cssSelector("div.recipe-container"));
+                    boolean craftingFlag = false;
+                    for (String item : itemsForCraft) {
+                        //List<WebElement> re = recipes.stream().filter(x->x.getAttribute("data-recipe")==item).collect(Collectors.toList());
+                        for (WebElement re : recipes) {
+                            if (re.getAttribute("data-recipe").contains(item)) {
+                                if (isChildElementPresent(By.cssSelector("div div span.text-success"), re)) //проверка на то, что мы можем его сделать.
                                 {
-                                    actions.moveToElement(element, 10, 10)
-                                            .click(element)
-                                            .build()
-                                            .perform();
+                                    WebElement element = re.findElement(By.cssSelector("div.quick-craft"));
+                                    //Проучаем кол-во сколько можем скрафтить, и размер пачки
+                                    Double itemCount = Double.parseDouble(re.findElement(By.cssSelector("div div span.text-success")).getText());
+                                    if (itemCount <= 4.0) continue;
+                                    Double dataAmount = Double.parseDouble(element.getAttribute("data-amount"));
+                                    Double craftCount = itemCount / dataAmount;
+                                    //Если их отношение меньше 1, то пропускаем!
+                                    if (craftCount < 1.0)
+                                        continue;
+                                    else if (craftCount > (double) (5 - craftingItems.size()))
+                                        craftCount = (double) (5 - craftingItems.size());
+                                    else
+                                        craftCount = Math.ceil(itemCount / dataAmount);
+
+                                    for (int i = 0; i < craftCount+1; i++) {
+                                        actions.moveToElement(element, 10, 10)
+                                                .click()
+                                                .build()
+                                                .perform();
+                                        sleep(300);
+                                    }
+                                    craftingFlag = true;
+                                    break;
                                 }
-                                craftingFlag = true;
-                                break;
                             }
                         }
-                    }
-                    if(craftingFlag) break;
+                        if (craftingFlag) break;
 
-                }
+                    }
+//                }
 
                 //тут надо сделать пройтись по всему списку itemForCraft, и как только находим один из рецептов, кликаем по нему (div.quick-craft).
             }
@@ -635,9 +642,19 @@ public class Mine_bot
     private void eat(String food) {
         try {
             if (isDisplayedElement(By.cssSelector("li.nav-item.equipmentTabLink"))) {
-                driver.findElement(By.cssSelector("li.nav-item.equipmentTabLink")).click(); //Мы в меню снаряжения!
-                WebElement item = driver.findElement(By.xpath("//div/img[contains(@src, '"+food+".svg')]"));
-                item.click();
+                WebElement equipmentTab = driver.findElement(By.cssSelector("li.nav-item.equipmentTabLink"));
+                if(isDisplayedElement(By.cssSelector("li.nav-item.equipmentTabLink a.active")))
+                {
+                    //equipmentTab.click(); //Мы в меню снаряжения!
+                    WebElement item = driver.findElement(By.xpath("//div/img[contains(@src, '" + food + ".svg')]"));
+                    item.click();
+                }
+                else
+                {
+                    equipmentTab.click(); //Мы в меню снаряжения!
+                    WebElement item = driver.findElement(By.xpath("//div/img[contains(@src, '" + food + ".svg')]"));
+                    item.click();
+                }
 //                List<WebElement> items = driver.findElements(By.cssSelector("div.item-icon-container.item.small"));
 //                for (WebElement item : items) {
 //                    WebElement img = item.findElement(By.cssSelector("img"));
@@ -706,7 +723,7 @@ public class Mine_bot
                         abilitys.get(5).click();
                         sleep(3000);
                     }
-                    abilitys.get(5).click();
+                    abilitys.get(1).click();
                 } catch (Exception e) {
                     e.printStackTrace();
                     attempts++;
@@ -765,8 +782,6 @@ public class Mine_bot
                             abilitys.get(5).click();
                             sleep(3000);
                         }
-                        abilitys.get(2).click();
-                        abilitys.get(3).click();
                         abilitys.get(5).click();
                     } catch (Exception e) {
                         e.printStackTrace();
