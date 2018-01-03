@@ -21,7 +21,7 @@ public class Mine_bot
     private long timeout = 3; //таймаут ожидания в минутах
     private double allowHpOre = 0.666; //Допустимый процет ХП у руды, чтоб ее начать вскаповать.
     private boolean exit = false; //Вспомогательная переменная, чтоб можно было прервать бесконечный цыкл.
-    private Integer floorNum = 9; //на какой этаж идем
+    private Integer floorNum = 7; //на какой этаж идем
     private Integer roomNum = 4; //в какую комнату
     private static String food = "banana"; //Что едим
 
