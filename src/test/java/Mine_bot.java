@@ -14,55 +14,61 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static junit.framework.TestCase.assertTrue;
 
-public class Mine_bot
-{
+public class Mine_bot {
     private static WebDriver driver;
     private WebElement oneOre; //Возможно вообще не нужно.
     private long timeout = 3; //таймаут ожидания в минутах
     private double allowHpOre = 0.666; //Допустимый процет ХП у руды, чтоб ее начать вскаповать.
     private boolean exit = false; //Вспомогательная переменная, чтоб можно было прервать бесконечный цыкл.
-    private Integer floorNum = 7; //на какой этаж идем
-    private Integer roomNum = 4; //в какую комнату
-    private static String food = "banana"; //Что едим
+    private Integer floorNum = 18; //на какой этаж идем
+    private Integer roomNum = 3; //в какую комнату
+    private static String food = "grapeFruit"; //Что едим
 
     private ArrayList<String> tabs; //Возможно вообще не нужно.
     private String login = "Deventur";
     private String pass = "qazxcv";
     //Зерна которые хотим сажать в проядке их приоритета.
-    private static ArrayList<String> seed =  new ArrayList<String>()
-                                                                    {{
-                                                                        add("basilSeed");
-                                                                        add("endiveSeed");
-                                                                        add("juniperSeed");
-                                                                        add("pinkRoseSeed");
-                                                                        add("letticeSeed");
-                                                                        add("bananaSeed");
-                                                                        add("lemonSeed");
-                                                                        add("feverfewSeed");
-                                                                        add("hydrangeaSeed");
-                                                                        add("cardoonSeed");
-                                                                        add("dragonfruitSeed");
-                                                                        add("chilliSeed");
-                                                                        add("bambooSeed");
-                                                                        add("pineappleSeed");
-                                                                    }};
-    private static ArrayList<String> itemsForCraft =  new ArrayList<String>()
-                                                                    {{
-                                                                        add("carbon_spear");
-                                                                        add("polished_titanium");
-                                                                        add("polished_steel");
-                                                                        add("polished_gold");
-                                                                        //add("carbon_sculpture");
-                                                                        add("polished_iron");
-                                                                        add("polished_tin");
-                                                                        add("copper_sculpture");
-                                                                        add("iron_pylon");
-                                                                        add("tin_pylon");
-                                                                    }};
+    private static ArrayList<String> seed = new ArrayList<String>() {{
+        add("agrimonySeed");
+        add("basilSeed");
+        add("endiveSeed");
+        add("juniperSeed");
+        add("pinkRoseSeed");
+        add("lemonSeed");
+        add("letticeSeed");
+        add("grapeFruitSeed");
+
+        add("bananaSeed");
+        add("feverfewSeed");
+
+        add("poppySeed");
+        add("hydrangeaSeed");
+        add("cardoonSeed");
+        add("dragonfruitSeed");
+        add("chilliSeed");
+        add("bambooSeed");
+        add("pineappleSeed");
+    }};
+    private static ArrayList<String> itemsForCraft = new ArrayList<String>() {{
+        add("mithril_spear");
+        add("cobalt_spear");
+        add("obsidian_spear");
+        add("carbon_spear");
+        add("tungsten_spear");
+        add("titanium_spear");
+        //add("polished_titanium");
+        add("polished_steel");
+        add("polished_gold");
+        //add("carbon_sculpture");
+        add("polished_iron");
+        add("polished_tin");
+        add("copper_sculpture");
+        add("iron_pylon");
+        add("tin_pylon");
+    }};
 
     @Before
-    public void Login()
-    {
+    public void Login() {
 
         System.setProperty("webdriver.chrome.driver", "WebDrivers\\chromedriver.exe");
 
@@ -73,8 +79,7 @@ public class Mine_bot
         driver.manage().timeouts().implicitlyWait(3, SECONDS);
         driver.get(Path);
 
-        if (isDisplayedElement(By.cssSelector("div.at-form")) || isDisplayedElement(By.cssSelector("div.at-error.alert.alert-danger > div")))
-        {
+        if (isDisplayedElement(By.cssSelector("div.at-form")) || isDisplayedElement(By.cssSelector("div.at-error.alert.alert-danger > div"))) {
 
             WebElement loginField = driver.findElement(By.id("at-field-username_and_email"));
             WebElement passField = driver.findElement(By.id("at-field-password"));
@@ -88,20 +93,16 @@ public class Mine_bot
 
         }
 
-        if (isDisplayedElement(By.cssSelector("form.form-inline.my-2.my-lg-0 > div.dropdown.ml-2")))
-        {
+        if (isDisplayedElement(By.cssSelector("form.form-inline.my-2.my-lg-0 > div.dropdown.ml-2"))) {
             System.out.println("Вход выполнен успешно!");
-        }
-        else
-        {
+        } else {
             System.out.println("Выполнить вход НЕ удалось!");
-            assertTrue("Выполнить вход НЕ удалось!",false);
+            assertTrue("Выполнить вход НЕ удалось!", false);
         }
     }
 
     @Test
-    public void Platation()
-    {
+    public void Platation() {
         try {
             String Path = "https://eternitytower.net/farming";
             driver.get(Path);
@@ -110,36 +111,34 @@ public class Mine_bot
             while (true) {
                 sleep(20000);
                 newDate = new Date();
-                if ((newDate.getTime() - oldDate.getTime()) / (1000) >= (40)){
+                if ((newDate.getTime() - oldDate.getTime()) / (1000) >= (40)) {
                     oldDate = newDate;
                     plantation(seed);
                 }
                 if (exit) break;
             }
             driver.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        catch (Exception e) {e.printStackTrace();}
     }
 
     @Test
-    public void Eating()
-    {
+    public void Eating() {
         Date oldDate = new Date(); //старое время в миллисекундах
         Date newDate;
         while (true) {
             try {
                 newDate = new Date();
                 //тут надо задать время в которое он (бот) будет проверять жратву
-                if ((newDate.getTime() - oldDate.getTime())/(1000)>= (20*60))
-                {
+                if ((newDate.getTime() - oldDate.getTime()) / (1000) >= (20 * 60)) {
                     //Проверяем на вкладке еквипмента ли мы
-                    if(isDisplayedElement(By.cssSelector("li.nav-item.equipmentTabLink a.active")))
-                    {
+                    if (isDisplayedElement(By.cssSelector("li.nav-item.equipmentTabLink a.active"))) {
                         //Проверяем ХПшки
                         WebElement personHP = driver.findElement(By.xpath("//h1[text()[contains(.,'My')]]/../../div/div/div/div[contains(@class,'justify-content-center')]"));
                         int curPersonHP = Integer.parseInt(personHP.getText().split(" / ")[0].replace(".", "").replace("k", "00"));
                         int fullPersonHP = Integer.parseInt(personHP.getText().split(" / ")[1].replace(".", "").replace("k", "00"));
-                        if (curPersonHP <= fullPersonHP*0.5) {
+                        if (curPersonHP <= fullPersonHP * 0.5) {
                             //Проверяем не жрем ли мы что-то, тут может быть баг с боевым бафом (который глобал), может надо убрать.
                             if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
                                 eat("lemon");//тут указать что жрать
@@ -148,18 +147,16 @@ public class Mine_bot
                         }
                     }
                 }
-                if (exit)  break;
+                if (exit) break;
                 sleep(20000);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
     @Test
-    public void MiningAll()
-    {
+    public void MiningAll() {
 
         Date oldDate = new Date(); //старое время в миллисекундах
         Date newDate;
@@ -168,38 +165,29 @@ public class Mine_bot
         driver.get(Path);
         driver.manage().timeouts().implicitlyWait(7, SECONDS);
 
-        if (isElementPresent(By.cssSelector("a.nav-link.equipmentLink"), driver))
-        {
+        if (isElementPresent(By.cssSelector("a.nav-link.equipmentLink"), driver)) {
 
             double dmgPick = this.getDngPick();
-            if(isElementPresent(By.cssSelector("img.minimize-icon"),driver))
-            {
+            if (isElementPresent(By.cssSelector("img.minimize-icon"), driver)) {
                 driver.findElement(By.cssSelector("img.minimize-icon")).click();
             }
-            while (true)
-            {
-                try
-                {
+            while (true) {
+                try {
                     WebElement mineTab = driver.findElement(By.cssSelector("a.nav-link.minePitLink"));
                     mineTab.click();
                     double curEnergy = miningOresAndGetCurEnergyPick(dmgPick);
                     newDate = new Date();
 
-                    if (newDate.getTime() - oldDate.getTime()>= (this.timeout*60_000))
-                    {
+                    if (newDate.getTime() - oldDate.getTime() >= (this.timeout * 60_000)) {
                         oldDate = newDate;
                         crafting(itemsForCraft);
                         driver.get("https://eternitytower.net/mining");
-                    }
-                    else if(curEnergy <= 1.0)
-                    {
+                    } else if (curEnergy <= 1.0) {
                         sleep(60_000);
                     }
                     //тут надо задать время в которое он (бот) будет проверять жратву
 
-                }
-                catch (Exception e)
-                {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 if (exit) break;
@@ -209,47 +197,41 @@ public class Mine_bot
     }
 
     @Test
-    public void PassiveBattle()
-    {
+    public void PassiveBattle() {
         String Path = "https://eternitytower.net/combat";
         driver.get(Path);
         driver.manage().timeouts().implicitlyWait(30, SECONDS);
+        Actions actions = new Actions(driver);
 
         try {
             if (isDisplayedElement(By.cssSelector("li.nav-item.abilitiesTabLink"))) {
                 while (true) {
-                    try
-                    {
+                    try {
                         WebElement abilitiesTab = driver.findElement(By.cssSelector("li.nav-item.abilitiesTabLink"));
-                        abilitiesTab.click();//мы во вкладке Башня
+                        //abilitiesTab.click();//мы во вкладке Башня
                         Map<String, Integer> resaltBattle = pasiveBattle();
-                        if (resaltBattle!=null) {
-                            if (resaltBattle.get("Health") <= 50)
-                            {
+                        if (resaltBattle != null) {
+                            if (resaltBattle.get("Health") <= 50) {
                                 if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
-                                    eat("lettice");
+                                    eat("banana");
                                 }
-                            }
-                            else if (resaltBattle.get("Energy") <= resaltBattle.get("FullEnergy") * 0.2)
-                            {
+                            } else if (resaltBattle.get("Energy") <= resaltBattle.get("FullEnergy") * 0.2) {
                                 if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
                                     eat("lemon");
                                 }
                             }
                         }
-                        abilitiesTab.click();//мы во вкладке Башня
+                        actions.sendKeys(Keys.PAGE_UP).build().perform();
+                        //abilitiesTab.sendKeys(Keys.PAGE_UP);
+                        //abilitiesTab.click();//мы во вкладке Башня
                         //sleep(70*1000); //ждем 70 секунд
                         if (exit) break;
-                    }
-                    catch (Exception e)
-                    {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -258,56 +240,61 @@ public class Mine_bot
 
 
     @Test
-    public void DemonsBattle()
-    {
+    public void DemonsBattle() {
         String Path = "https://eternitytower.net/combat";
         driver.get(Path);
         driver.manage().timeouts().implicitlyWait(30, SECONDS);
+        Actions actions = new Actions(driver);
 
         try {
             if (isDisplayedElement(By.cssSelector("li.nav-item.towerTabLink"))) {
+                WebElement towerTab = driver.findElement(By.cssSelector("li.nav-item.towerTabLink"));
+                WebElement equipmentTab = driver.findElement(By.cssSelector("li.nav-item.equipmentTabLink"));
                 while (true) {
-                    try
-                    {
-                        WebElement towerTab = driver.findElement(By.cssSelector("li.nav-item.towerTabLink"));
+                    try {
+                        //WebElement towerTab = driver.findElement(By.cssSelector("li.nav-item.towerTabLink"));
                         towerTab.click();//мы во вкладке Башня
                         enterToBattle(floorNum, roomNum);
                         Map<String, Integer> resaltBattle = demonsBattle();
-                        if (resaltBattle!=null) {
-                            if (resaltBattle.get("Health") <= 50)
-                            {
+                        actions.sendKeys(Keys.PAGE_UP)
+                                .sendKeys(Keys.PAGE_UP)
+                                .sendKeys(Keys.PAGE_UP)
+                                .build()
+                                .perform();
+
+                        if (resaltBattle != null) {
+                            if (resaltBattle.get("Health") <= 50) {
                                 if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
                                     eat(food);
                                 }
-                            }
-                            else if (resaltBattle.get("Energy") <= resaltBattle.get("FullEnergy") * 0.1)
-                            {
+                            } else if (resaltBattle.get("Energy") <= resaltBattle.get("FullEnergy") * 0.1) {
                                 if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
                                     eat("lemon");
                                 }
                             }
                         }
-                        WebElement abilitiesTab = driver.findElement(By.cssSelector("li.nav-item.abilitiesTabLink"));
-                        abilitiesTab.click();//мы во вкладке Башня
-                        sleep(70*1000); //ждем 70 секунд
+
+                        equipmentTab.click();//мы во вкладке инвентаря
+                        sleep(70 * 1000); //ждем 70 секунд
+                        actions.sendKeys(Keys.PAGE_UP)
+                                .sendKeys(Keys.PAGE_UP)
+                                .sendKeys(Keys.PAGE_UP)
+                                .build()
+                                .perform();
 //                        sleep(21*60*1000);//Превращаю бота в выращивателя.
 //                        plantation(seed);
 //                        driver.get("https://eternitytower.net/combat");
                         //driver.switchTo().window(tabs.get(0));
                         if (exit) break;
-                    }
-                    catch (Exception e)
-                    {
+                    } catch (Exception e) {
                         e.printStackTrace();
-                        if (!isElementPresent(By.cssSelector("li.nav-item.towerTabLink"))){
+                        if (!isElementPresent(By.cssSelector("li.nav-item.towerTabLink"))) {
                             sleep(20000);
                         }
                     }
                 }
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -315,8 +302,7 @@ public class Mine_bot
     }
 
     @Test
-    public void Battle()
-    {
+    public void Battle() {
         String Path = "https://eternitytower.net/combat";
         driver.get(Path);
         driver.manage().timeouts().implicitlyWait(30, SECONDS);
@@ -324,15 +310,13 @@ public class Mine_bot
         try {
             if (isElementPresent(By.cssSelector("li.nav-item.towerTabLink"), driver)) {
                 while (true) {
-                    try
-                    {
+                    try {
                         WebElement eqTab = driver.findElement(By.cssSelector("li.nav-item.towerTabLink"));
                         eqTab.click();//мы во вкладке Башня
                         enterToBattle(floorNum, roomNum);
                         Map<String, Integer> resaltBattle = battle();
-                        if (resaltBattle!=null) {
-                            if (resaltBattle.get("Health") <= resaltBattle.get("FullHealth") * 0.3)
-                            {
+                        if (resaltBattle != null) {
+                            if (resaltBattle.get("Health") <= resaltBattle.get("FullHealth") * 0.3) {
                                 if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
                                     eat(food);
                                 }
@@ -342,9 +326,7 @@ public class Mine_bot
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
-                            }
-                            else if (resaltBattle.get("Energy") <= resaltBattle.get("FullEnergy") * 0.1)
-                            {
+                            } else if (resaltBattle.get("Energy") <= resaltBattle.get("FullEnergy") * 0.1) {
                                 if (!isDisplayedElement(By.cssSelector("div.buff-icon-container"))) {
                                     eat("lemon");
                                 }
@@ -361,27 +343,22 @@ public class Mine_bot
 //                        driver.get("https://eternitytower.net/combat");
                         //driver.switchTo().window(tabs.get(0));
                         if (exit) break;
-                    }
-                    catch (Exception e)
-                    {
+                    } catch (Exception e) {
                         e.printStackTrace();
-                        if (!isElementPresent(By.cssSelector("li.nav-item.towerTabLink"))){
+                        if (!isElementPresent(By.cssSelector("li.nav-item.towerTabLink"))) {
                             sleep(20000);
                         }
                     }
                 }
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         driver.close();
     }
 
-    private void adventuresBattle(ArrayList<AdventurePriority> adventurePriorities )
-    {
+    private void adventuresBattle(ArrayList<AdventurePriority> adventurePriorities) {
         String Path = "https://eternitytower.net/combat";
         driver.get(Path);
         driver.manage().timeouts().implicitlyWait(30, SECONDS);
@@ -392,10 +369,10 @@ public class Mine_bot
             //Получить текущие адвенчуры и расставляем им приортитеты:
             ArrayList<Adventure> activeAdventures = new ArrayList<>();
             List<WebElement> actAdventures = driver.findElements(By.xpath("//../button[contains(@class, 'cancel-adventure-btn')]/../.."));
-            actAdventures.forEach(adv-> {
+            actAdventures.forEach(adv -> {
                 String timeType = adv.getText().split("\n")[1];
                 String stateType = adv.getText().split("\n")[2];
-                Integer priority = adventurePriorities.indexOf(new AdventurePriority(timeType,stateType));
+                Integer priority = adventurePriorities.indexOf(new AdventurePriority(timeType, stateType));
                 activeAdventures.add(new Adventure(adv, timeType, stateType, priority));
             });
 
@@ -406,24 +383,22 @@ public class Mine_bot
             sAdventures.forEach(adv -> {
                 String timeType = adv.getText().split("\n")[1];
                 String stateType = adv.getText().split("\n")[2];
-                Integer priority = adventurePriorities.indexOf(new AdventurePriority(timeType,stateType));
+                Integer priority = adventurePriorities.indexOf(new AdventurePriority(timeType, stateType));
                 availableAdventures.add(new Adventure(adv, timeType, stateType, priority));
             });
 
 
             /*Тут надо пройтись по кадому активному, и если его приоритет ниже,
-            * чем есть доступный, то его отменяем, и запускаем приоритетный неактивный адвенчур.
-            * Тот который остановили - заменяем тем, который запустили.
-            * */
+             * чем есть доступный, то его отменяем, и запускаем приоритетный неактивный адвенчур.
+             * Тот который остановили - заменяем тем, который запустили.
+             * */
             System.out.println();
         }
 
 
-
     }
 
-    private Double miningOresAndGetCurEnergyPick(Double dmgPick)
-    {
+    private Double miningOresAndGetCurEnergyPick(Double dmgPick) {
         driver.manage().timeouts().implicitlyWait(500, MILLISECONDS);
         WebElement enMiming = driver.findElement(By.cssSelector("div.d-flex.flex-column.mb-3 > div.d-flex"));
         String en = enMiming.getText();
@@ -445,7 +420,7 @@ public class Mine_bot
                     Double curOreHP = Double.parseDouble(oreHP.split(" / ")[0].replace(".", "").replace("k", "00"));
                     Double fullOreHP = Double.parseDouble(oreHP.split(" / ")[1].replace(".", "").replace("k", "00"));
                     //Если это GEM, то копаем их несчадно
-                    if (curOreHP <= (dmgPick * 2) || curOreHP <= (fullOreHP * 0.05) || srcImg.contains("jade") || srcImg.contains("sapphire") || srcImg.contains("lapis") || srcImg.contains("ruby") || srcImg.contains("emerald") || srcImg.contains("gem")) {
+                    if (curOreHP <= (dmgPick * 2) || curOreHP <= (fullOreHP * 0.05) || srcImg.contains("jade") || srcImg.contains("sapphire") || srcImg.contains("lapis") || srcImg.contains("ruby") || srcImg.contains("emerald") || srcImg.contains("gem") || srcImg.contains("tanzanite")) {
 
                         Double needClickCnt = curOreHP / dmgPick;
                         while (needClickCnt >= 0.1) {
@@ -473,8 +448,7 @@ public class Mine_bot
         return curEnergy;
     }
 
-    private Double getDngPick()
-    {
+    private Double getDngPick() {
         try {
             WebElement eqTab = driver.findElement(By.cssSelector("a.nav-link.equipmentLink"));
             eqTab.click();
@@ -487,104 +461,94 @@ public class Mine_bot
             mineTab.click();
 
             return dmgPick;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
             return 50.0;
         }
     }
 
-    private void crafting(ArrayList<String> itemsForCraft)
-    {
+    private void crafting(ArrayList<String> itemsForCraft) {
         try {
             driver.manage().timeouts().implicitlyWait(15, SECONDS);
             driver.get("https://eternitytower.net/crafting");
 //            driver.switchTo().window(tabs.get(1));
-            if (isDisplayedElement(By.cssSelector("li.nav-item.crafting-filter"))){
+            if (isDisplayedElement(By.cssSelector("li.nav-item.crafting-filter"))) {
 
                 driver.findElement(By.cssSelector("li.nav-item.crafting-filter[data-filter='all']")).click();
 
                 driver.manage().timeouts().implicitlyWait(1, SECONDS);
 
 //                if(isDisplayedElement(By.cssSelector("div.my-3>div.d-flex.flex-row img"))) {
-                    List<WebElement> craftingItems = driver.findElements(By.cssSelector("div.my-3>div.d-flex.flex-row img"));
-                    //если сейчас крафтим больше 4 предметов, то выходим
-                    if (craftingItems.size() > 4)
-                        return;
+                List<WebElement> craftingItems = driver.findElements(By.cssSelector("div.my-3>div.d-flex.flex-row img"));
+                //если сейчас крафтим больше 4 предметов, то выходим
+                if (craftingItems.size() > 4)
+                    return;
 
-                    Actions actions = new Actions(driver);
-                    List<WebElement> recipes = driver.findElements(By.cssSelector("div.recipe-container"));
-                    boolean craftingFlag = false;
-                    for (String item : itemsForCraft) {
-                        //List<WebElement> re = recipes.stream().filter(x->x.getAttribute("data-recipe")==item).collect(Collectors.toList());
-                        for (WebElement re : recipes) {
-                            if (re.getAttribute("data-recipe").contains(item)) {
-                                if (isChildElementPresent(By.cssSelector("div div span.text-success"), re)) //проверка на то, что мы можем его сделать.
-                                {
-                                    WebElement element = re.findElement(By.cssSelector("div.quick-craft"));
-                                    //Проучаем кол-во сколько можем скрафтить, и размер пачки
-                                    Double itemCount = Double.parseDouble(re.findElement(By.cssSelector("div div span.text-success")).getText());
-                                    if (itemCount <= 4.0) continue;
-                                    Double dataAmount = Double.parseDouble(element.getAttribute("data-amount"));
-                                    Double craftCount = itemCount / dataAmount;
-                                    //Если их отношение меньше 1, то пропускаем!
-                                    if (craftCount < 1.0)
-                                        continue;
-                                    else if (craftCount > (double) (5 - craftingItems.size()))
-                                        craftCount = (double) (5 - craftingItems.size());
-                                    else
-                                        craftCount = Math.ceil(itemCount / dataAmount);
+                Actions actions = new Actions(driver);
+                List<WebElement> recipes = driver.findElements(By.cssSelector("div.recipe-container"));
+                boolean craftingFlag = false;
+                for (String item : itemsForCraft) {
+                    //List<WebElement> re = recipes.stream().filter(x->x.getAttribute("data-recipe")==item).collect(Collectors.toList());
+                    for (WebElement re : recipes) {
+                        if (re.getAttribute("data-recipe").contains(item)) {
+                            if (isChildElementPresent(By.cssSelector("div div span.text-success"), re)) //проверка на то, что мы можем его сделать.
+                            {
+                                WebElement element = re.findElement(By.cssSelector("div.quick-craft"));
+                                //Проучаем кол-во сколько можем скрафтить, и размер пачки
+                                Double itemCount = Double.parseDouble(re.findElement(By.cssSelector("div div span.text-success")).getText());
+                                if (itemCount <= 4.0) continue;
+                                Double dataAmount = Double.parseDouble(element.getAttribute("data-amount"));
+                                Double craftCount = itemCount / dataAmount;
+                                //Если их отношение меньше 1, то пропускаем!
+                                if (craftCount < 1.0)
+                                    continue;
+                                else if (craftCount > (double) (5 - craftingItems.size()))
+                                    craftCount = (double) (5 - craftingItems.size());
+                                else
+                                    craftCount = Math.ceil(itemCount / dataAmount);
 
-                                    for (int i = 0; i < craftCount+1; i++) {
-                                        actions.moveToElement(element, 10, 10)
-                                                .click()
-                                                .build()
-                                                .perform();
-                                        sleep(300);
-                                    }
-                                    craftingFlag = true;
-                                    break;
+                                for (int i = 0; i < craftCount + 1; i++) {
+                                    actions.moveToElement(element, 10, 10)
+                                            .click()
+                                            .build()
+                                            .perform();
+                                    sleep(300);
                                 }
+                                craftingFlag = true;
+                                break;
                             }
                         }
-                        if (craftingFlag) break;
-
                     }
+                    if (craftingFlag) break;
+
+                }
 //                }
 
                 //тут надо сделать пройтись по всему списку itemForCraft, и как только находим один из рецептов, кликаем по нему (div.quick-craft).
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private WebElement checkSeed(ArrayList<String> seedName) {
         List<WebElement> seeds = driver.findElements(By.cssSelector("div.item-icon-container.item.small"));
-        if (seeds.size() > 0)
-        {   //Пробегам по всем семенам, и ищем то, которое хотим сажать
+        if (seeds.size() > 0) {   //Пробегам по всем семенам, и ищем то, которое хотим сажать
             HashMap<String, WebElement> necessaryGrain = new HashMap();
-            for (WebElement s : seeds)
-            {
+            for (WebElement s : seeds) {
                 WebElement img = s.findElement(By.cssSelector("img"));
                 String curNameSeed = img.getAttribute("src");
-                curNameSeed = curNameSeed.substring(curNameSeed.lastIndexOf("/")+1,curNameSeed.lastIndexOf(".svg"));
+                curNameSeed = curNameSeed.substring(curNameSeed.lastIndexOf("/") + 1, curNameSeed.lastIndexOf(".svg"));
                 //То, что хотим сажать живет в seedName
-                if(seedName.contains(curNameSeed))
-                {
+                if (seedName.contains(curNameSeed)) {
                     //Запоминаем
                     //return s;
                     necessaryGrain.put(curNameSeed, s);
                 }
             }
             //Перебираем все желаемые зерна по порядку
-            for(String sn : seedName)
-            {
-                if (necessaryGrain.containsKey(sn))
-                {
+            for (String sn : seedName) {
+                if (necessaryGrain.containsKey(sn)) {
                     //как только находим то зерно, которое хотим сажать - возвращаем его WebElement.
                     return necessaryGrain.get(sn);
                 }
@@ -632,9 +596,7 @@ public class Mine_bot
 
                 }
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -643,14 +605,11 @@ public class Mine_bot
         try {
             if (isDisplayedElement(By.cssSelector("li.nav-item.equipmentTabLink"))) {
                 WebElement equipmentTab = driver.findElement(By.cssSelector("li.nav-item.equipmentTabLink"));
-                if(isDisplayedElement(By.cssSelector("li.nav-item.equipmentTabLink a.active")))
-                {
+                if (isDisplayedElement(By.cssSelector("li.nav-item.equipmentTabLink a.active"))) {
                     //equipmentTab.click(); //Мы в меню снаряжения!
                     WebElement item = driver.findElement(By.xpath("//div/img[contains(@src, '" + food + ".svg')]"));
                     item.click();
-                }
-                else
-                {
+                } else {
                     equipmentTab.click(); //Мы в меню снаряжения!
                     WebElement item = driver.findElement(By.xpath("//div/img[contains(@src, '" + food + ".svg')]"));
                     item.click();
@@ -664,17 +623,13 @@ public class Mine_bot
 //                    }
 //                }
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private boolean isDisplayedElement(By by)
-    {
-        if (isElementPresent(by) && driver.findElement(by).isDisplayed())
-        {
+    private boolean isDisplayedElement(By by) {
+        if (isElementPresent(by) && driver.findElement(by).isDisplayed()) {
             return true;
         }
         return false;
@@ -698,11 +653,10 @@ public class Mine_bot
         }
     }
 
-    private Map<String,Integer> demonsBattle(){
+    private Map<String, Integer> demonsBattle() {
 
 
-        if(driver.findElements(By.xpath("//div/div/h1[contains(text(),'Enemy Units')]/../../div[contains(@class,'d-flex')]/div")).size()>=1)
-        {
+        if (driver.findElements(By.xpath("//div/div/h1[contains(text(),'Enemy Units')]/../../div[contains(@class,'d-flex')]/div")).size() >= 1) {
             //div.ability-icon-container
             List<WebElement> abilitys = driver.findElements(By.cssSelector("div.ability-icon-container"));
             driver.manage().timeouts().implicitlyWait(300, MILLISECONDS);
@@ -710,13 +664,13 @@ public class Mine_bot
             WebElement personHP = null;
             Integer curPersonHP = 1000;
             Integer fullPersonHP = 1000;
-            while (!isDisplayedResaltBattle() && attempts < 10)
-            {
+            while (!isDisplayedResaltBattle() && attempts < 10) {
                 try {
                     personHP = driver.findElement(By.xpath("//h1[text()[contains(.,'My')]]/../../div/div/div/div[contains(@class,'justify-content-center')]"));
                     curPersonHP = Integer.parseInt(personHP.getText().split(" / ")[0].replace(".", "").replace("k", "00"));
                     fullPersonHP = Integer.parseInt(personHP.getText().split(" / ")[1].replace(".", "").replace("k", "00"));
                     if (curPersonHP <= fullPersonHP * 0.17) {
+                        abilitys.get(1).click();
                         abilitys.get(2).click();
                         abilitys.get(3).click();
                         abilitys.get(4).click();
@@ -733,8 +687,7 @@ public class Mine_bot
             //strong.text-success
             //strong.text-danger
         }
-        try
-        {
+        try {
             WebElement curEn = driver.findElement(By.cssSelector("div.d-flex.flex-column.my-3"));
             List<WebElement> curState = driver.findElements(By.cssSelector("div.d-flex.flex-column.m-3"));
 
@@ -743,24 +696,22 @@ public class Mine_bot
             Integer fullPersonHP = Integer.parseInt(curState.get(0).getText().split(" / ")[1].replace(".", "").replace("k", "00"));
             Integer curPersonEnergy = Integer.parseInt(curEn.getText().split(" / ")[0]);
             Integer fullPersonEnergy = Integer.parseInt(curEn.getText().split(" / ")[1]);
-            Map<String,Integer> curPersonState = new HashMap<>();
+            Map<String, Integer> curPersonState = new HashMap<>();
             curPersonState.put("Health", curPersonHP);
             curPersonState.put("FullHealth", fullPersonHP);
             curPersonState.put("Energy", curPersonEnergy);
             curPersonState.put("FullEnergy", fullPersonEnergy);
             driver.manage().timeouts().implicitlyWait(3, SECONDS);
             return curPersonState;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    private Map<String,Integer> pasiveBattle() {
+    private Map<String, Integer> pasiveBattle() {
         //Ждем начала биты.
-        while(true) {
+        while (true) {
             //как только битва началась, стандартно отрабатываем ее до ее окончания.
             if (driver.findElements(By.xpath("//div/div/h1[contains(text(),'Enemy Units')]/../../div[contains(@class,'d-flex')]/div")).size() >= 1) {
 
@@ -768,20 +719,21 @@ public class Mine_bot
                 driver.manage().timeouts().implicitlyWait(300, MILLISECONDS);
                 Integer attempts = 0;
                 WebElement personHP = null;
-                Integer curPersonHP = 1000;
-                Integer fullPersonHP = 1000;
+                Integer curPersonHP = 1400;
+                Integer fullPersonHP = 1400;
                 while (!isDisplayedResaltBattle() && attempts < 10) {
                     try {
                         personHP = driver.findElement(By.xpath("//h1[text()[contains(.,'My')]]/../../div/div/div/div[contains(@class,'justify-content-center')]"));
                         curPersonHP = Integer.parseInt(personHP.getText().split(" / ")[0].replace(".", "").replace("k", "00"));
                         fullPersonHP = Integer.parseInt(personHP.getText().split(" / ")[1].replace(".", "").replace("k", "00"));
-                        if (curPersonHP <= fullPersonHP * 0.17) {
-                            abilitys.get(2).click();
-                            abilitys.get(3).click();
-                            abilitys.get(4).click();
-                            abilitys.get(5).click();
-                            sleep(3000);
-                        }
+                        //if (curPersonHP <= fullPersonHP * 0.17) {
+                        abilitys.get(1).click();
+                        abilitys.get(2).click();
+                        abilitys.get(3).click();
+                        abilitys.get(4).click();
+                        abilitys.get(5).click();
+                        sleep(3000);
+                        //}
                         abilitys.get(5).click();
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -790,8 +742,7 @@ public class Mine_bot
                 }
                 //как только битва закончена (вышли из внутреннего цикла), перестаем ждать битву
                 break;
-            }
-            else if (exit) break; //чтоб можно было "законно" выйти из цыкла
+            } else if (exit) break; //чтоб можно было "законно" выйти из цыкла
 
         }
 
@@ -818,16 +769,14 @@ public class Mine_bot
         return null;
     }
 
-    private Map<String,Integer> battle(){
+    private Map<String, Integer> battle() {
 
-        if(driver.findElements(By.xpath("//div/div/h1[contains(text(),'Enemy Units')]/../../div[contains(@class,'d-flex')]/div")).size()>=1)
-        {
+        if (driver.findElements(By.xpath("//div/div/h1[contains(text(),'Enemy Units')]/../../div[contains(@class,'d-flex')]/div")).size() >= 1) {
             //div.ability-icon-container
             List<WebElement> abilitys = driver.findElements(By.cssSelector("div.ability-icon-container"));
             driver.manage().timeouts().implicitlyWait(300, MILLISECONDS);
             Integer attempts = 0;
-            while (!isDisplayedResaltBattle() && attempts < 10)
-            {
+            while (!isDisplayedResaltBattle() && attempts < 10) {
                 try {
                     abilitys.get(2).click();
                     abilitys.get(3).click();
@@ -842,8 +791,7 @@ public class Mine_bot
             //strong.text-success
             //strong.text-danger
         }
-        try
-        {
+        try {
             WebElement curEn = driver.findElement(By.cssSelector("div.d-flex.flex-column.my-3"));
             List<WebElement> curState = driver.findElements(By.cssSelector("div.d-flex.flex-column.m-3"));
 
@@ -852,24 +800,21 @@ public class Mine_bot
             Integer fullPersonHP = Integer.parseInt(curState.get(0).getText().split(" / ")[1].replace(".", "").replace("k", "00"));
             Integer curPersonEnergy = Integer.parseInt(curEn.getText().split(" / ")[0]);
             Integer fullPersonEnergy = Integer.parseInt(curEn.getText().split(" / ")[1]);
-            Map<String,Integer> curPersonState = new HashMap<>();
+            Map<String, Integer> curPersonState = new HashMap<>();
             curPersonState.put("Health", curPersonHP);
             curPersonState.put("FullHealth", fullPersonHP);
             curPersonState.put("Energy", curPersonEnergy);
             curPersonState.put("FullEnergy", fullPersonEnergy);
             driver.manage().timeouts().implicitlyWait(3, SECONDS);
             return curPersonState;
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    private void enterToBattle(int floor, int room){
-        try
-        {
+    private void enterToBattle(int floor, int room) {
+        try {
             RemoteWebElement floorBtn = (RemoteWebElement) driver.findElement(By.cssSelector("div.dropdown.mx-3"));
             if (!floorBtn.findElement(By.cssSelector("button.btn")).getText().contains(floorNum.toString())) {
                 floorBtn.click();
@@ -885,23 +830,19 @@ public class Mine_bot
                     .findElement(By.cssSelector("tbody"))
                     .findElements(By.cssSelector("tr"));
             tableRooms.get(room - 1).click();
-            sleep(1000);
-        }
-        catch (Exception e)
-        {
+            sleep(300);
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
     }
 
-    private boolean isDisplayedResaltBattle(){
-        if (isElementPresent(By.cssSelector("strong.text-success"))){
+    private boolean isDisplayedResaltBattle() {
+        if (isElementPresent(By.cssSelector("strong.text-success"))) {
             return driver.findElement(By.cssSelector("strong.text-success")).isDisplayed();
-        }
-        else if(isElementPresent(By.cssSelector("strong.text-danger"))){
+        } else if (isElementPresent(By.cssSelector("strong.text-danger"))) {
             return driver.findElement(By.cssSelector("strong.text-danger")).isDisplayed();
-        }
-        else{
+        } else {
             return false;
         }
 
@@ -918,7 +859,7 @@ public class Mine_bot
     }
 
     @After
-    public void tearDown()  {
+    public void tearDown() {
         driver.quit();
     }
 
